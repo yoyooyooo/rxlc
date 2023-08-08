@@ -43,7 +43,9 @@ export const runFlow = ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
     }
 
     // 否则，我们订阅这个节点的上游节点
-    const subscription = combineLatest(upstreamNodesOfMap.map((a) => a!.subject))
+    const subscription = (!node.type || node.type === "combine" ? combineLatest : combineLatest)(
+      upstreamNodesOfMap.map((a) => a!.subject)
+    )
       .pipe(
         map((inputs) => ({ inputs })),
         tap((res) => console.log(`【转换】使用id=${node.id}的handler`, res)),
@@ -89,4 +91,8 @@ export const runFlow = ({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) => {
     .subscribe((res) => {
       console.log("result", res);
     });
+
+  //   setTimeout(() => {
+  //     nodesMap.get("2")!.subject.next(`www`);
+  //   }, 1000);
 };
