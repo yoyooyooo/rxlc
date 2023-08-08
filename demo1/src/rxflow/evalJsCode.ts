@@ -19,16 +19,20 @@ export const evalJsCode = async (
   }
 };
 
-const defaultHandler = (inputs: any[]) => inputs?.[0];
+type Upstream = {
+  inputs: any[];
+};
+
+const defaultHandler = (res: Upstream) => res.inputs?.[0];
 
 // 处理允许是字符串的函数
-export const transformJsCode = (handler?: string | Function): OperatorFunction<any[], any[]> => {
+export const transformJsCode = (handler?: string | Function): OperatorFunction<Upstream, any[]> => {
   return pipe(
     !handler
       ? map(defaultHandler) // 默认第一个输入项作为输出
-      : switchMap((values) => {
+      : switchMap((res) => {
           if (handler) {
-            const result = evalJsCode(handler, { args: values });
+            const result = evalJsCode(handler, { args: [{ inputs: res.inputs }] });
             return from(result).pipe(
               switchMap((input) => {
                 if (isObservable(input)) {
@@ -39,7 +43,7 @@ export const transformJsCode = (handler?: string | Function): OperatorFunction<a
               })
             );
           }
-          return of(values);
+          return of(res);
         })
   );
 };
